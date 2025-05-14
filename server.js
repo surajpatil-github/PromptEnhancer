@@ -63,7 +63,8 @@ app.post("/api/enhance", async (req, res) => {
     const followUpQuestions = await generateFollowUpQuestions(
       openai,
       prompt,
-      model
+      model,
+      useEnglish
     );
     console.log("Generated follow-up questions:", followUpQuestions);
 
@@ -206,11 +207,15 @@ app.post("/api/follow-up", async (req, res) => {
     // Update the original prompt with the answer
     const updatedPrompt = `${conversation.originalPrompt}\nAdditional context: ${answer}`;
 
+    // Get the useEnglish preference from the conversation
+    const useEnglish = conversation.useEnglish || false;
+    
     // Generate new follow-up questions based on the updated context
     const followUpQuestions = await generateFollowUpQuestions(
       openai,
       updatedPrompt,
-      model
+      model,
+      useEnglish
     );
 
     // Update conversation state
@@ -229,18 +234,26 @@ app.post("/api/follow-up", async (req, res) => {
 });
 
 // Helper function to generate follow-up questions
-async function generateFollowUpQuestions(openai, prompt, model) {
+async function generateFollowUpQuestions(openai, prompt, model, useEnglish = false) {
   const templates = require("./data/templates");
   const formattedInput = templates.follow_up.replace("{prompt}", prompt);
   console.log("Sending follow-up request to OpenAI:", formattedInput);
+
+  let systemContent = "You are a helpful assistant that generates relevant follow-up questions to help clarify and enhance user requests. Your questions should be specific, relevant, and help gather important details that would improve the quality of the response. Return ONLY a JSON array of questions, with no additional text or explanation.";
+  
+  // Add language instruction based on useEnglish setting
+  if (useEnglish) {
+    systemContent += " " + templates.lang_eng;
+  } else {
+    systemContent += " " + templates.lang_default;
+  }
 
   const response = await openai.chat.completions.create({
     model: model || "gpt-4",
     messages: [
       {
         role: "system",
-        content:
-          "You are a helpful assistant that generates relevant follow-up questions to help clarify and enhance user requests. Your questions should be specific, relevant, and help gather important details that would improve the quality of the response. Return ONLY a JSON array of questions, with no additional text or explanation.",
+        content: systemContent
       },
       { role: "user", content: formattedInput },
     ],
@@ -254,7 +267,11 @@ async function generateFollowUpQuestions(openai, prompt, model) {
     // Ensure we have at least 3 questions
     if (!Array.isArray(questions) || questions.length < 3) {
       console.log("Using fallback questions due to invalid response");
-      return [
+      return useEnglish ? [
+        "What specific details would you like to know about this topic?",
+        "Are there any particular constraints or requirements to consider?",
+        "What is your level of expertise in this area?",
+      ] : [
         "What specific details would you like to know about this topic?",
         "Are there any particular constraints or requirements to consider?",
         "What is your level of expertise in this area?",
@@ -263,7 +280,11 @@ async function generateFollowUpQuestions(openai, prompt, model) {
     return questions;
   } catch (error) {
     console.error("Error parsing follow-up questions:", error);
-    return [
+    return useEnglish ? [
+      "What specific details would you like to know about this topic?",
+      "Are there any particular constraints or requirements to consider?",
+      "What is your level of expertise in this area?",
+    ] : [
       "What specific details would you like to know about this topic?",
       "Are there any particular constraints or requirements to consider?",
       "What is your level of expertise in this area?",
