@@ -32,4 +32,8 @@ module.exports = {
   chain_of_thought_simpler: "Encourage step-by-step reasoning",
   few_shot_simpler: "Add input-output examples",
   role_play_simpler: "Frame as expert conversation",
+
+  // Follow-up questions
+  follow_up:
+    "Based on the user's request '{prompt}', generate 3-5 relevant follow-up questions that would help clarify and enhance their request. Format the response as a JSON array of questions.",
 };

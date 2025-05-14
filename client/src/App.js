@@ -53,7 +53,8 @@ const theme = createTheme({
 
 function App() {
   const [apiKey, setApiKey] = useState(
-    localStorage.getItem("openai_api_key") || process.env.REACT_APP_OPENAI_API_KEY
+    localStorage.getItem("openai_api_key") ||
+      process.env.REACT_APP_OPENAI_API_KEY
   );
   const [originalPrompt, setOriginalPrompt] = useState("");
   const [enhancedPrompt, setEnhancedPrompt] = useState("");
@@ -65,6 +66,11 @@ function App() {
     { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
   ]);
   const [selectedModel, setSelectedModel] = useState("gpt-4");
+  const [conversationId, setConversationId] = useState(null);
+  const [followUpQuestions, setFollowUpQuestions] = useState([]);
+  const [lockedQuestions, setLockedQuestions] = useState(false); // Add this state to track if questions should be locked
+  const [followUpAnswers, setFollowUpAnswers] = useState({});
+  const [showFollowUps, setShowFollowUps] = useState(false);
 
   const [selectedSkills, setSelectedSkills] = useState({
     clarity: false,
@@ -123,6 +129,39 @@ function App() {
     }));
   };
 
+  // Handle follow-up answer
+  const handleFollowUpAnswer = (question, answer) => {
+    // Simply store the answer without making an API request
+    setFollowUpAnswers((prev) => ({
+      ...prev,
+      [question]: answer,
+    }));
+  };
+
+  // Generate final prompt with follow-up answers
+  const generateFinalPrompt = async () => {
+    if (!conversationId) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await axios.post("/api/final-prompt", {
+        apiKey,
+        conversationId,
+        answers: followUpAnswers,
+        model: selectedModel,
+      });
+      
+      setEnhancedPrompt(response.data.finalPrompt);
+    } catch (error) {
+      console.error("Error generating final prompt:", error);
+      setError(error.response?.data?.error || error.message || "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   // Enhance the prompt
   const enhancePrompt = async () => {
     if (!apiKey) {
@@ -145,6 +184,7 @@ function App() {
     setError(null);
 
     try {
+      console.log("Sending enhance request with prompt:", originalPrompt);
       const response = await axios.post("/api/enhance", {
         apiKey,
         prompt: originalPrompt,
@@ -153,9 +193,14 @@ function App() {
         insertPhrases: selectedPhrases,
         useEnglish,
         useSimplified,
+        conversationId,
       });
 
+      console.log("Received response:", response.data);
       setEnhancedPrompt(response.data.enhancedPrompt);
+      setConversationId(response.data.conversationId);
+      setFollowUpQuestions(response.data.followUpQuestions || []);
+      setShowFollowUps(true);
     } catch (error) {
       console.error("Error enhancing prompt:", error);
       setError(error.response?.data?.error || error.message || "Unknown error");
@@ -195,6 +240,11 @@ function App() {
             useSimplified={useSimplified}
             setUseSimplified={setUseSimplified}
             enhancePrompt={enhancePrompt}
+            followUpQuestions={followUpQuestions}
+            followUpAnswers={followUpAnswers}
+            handleFollowUpAnswer={handleFollowUpAnswer}
+            showFollowUps={showFollowUps}
+            generateFinalPrompt={generateFinalPrompt}
           />
         </Container>
         <Footer />

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Grid,
   Paper,
@@ -46,11 +46,19 @@ const MainContent = ({
   useSimplified,
   setUseSimplified,
   enhancePrompt,
+  followUpQuestions,
+  followUpAnswers,
+  handleFollowUpAnswer,
+  showFollowUps,
+  generateFinalPrompt,
 }) => {
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     alert("Copied to clipboard");
   };
+
+  console.log("MainContent render - followUpQuestions:", followUpQuestions);
+  console.log("MainContent render - showFollowUps:", showFollowUps);
 
   return (
     <Grid container spacing={3}>
@@ -318,13 +326,13 @@ const MainContent = ({
             />
           </Box>
 
-          <Box sx={{ display: "flex", gap: 2, mb: 3 }}>
-            <FormControl fullWidth>
+          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+            <FormControl sx={{ minWidth: 200 }}>
               <InputLabel>Model</InputLabel>
               <Select
                 value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
                 label="Model"
+                onChange={(e) => setSelectedModel(e.target.value)}
               >
                 {models.map((model) => (
                   <MenuItem key={model.id} value={model.id}>
@@ -334,25 +342,26 @@ const MainContent = ({
               </Select>
             </FormControl>
 
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useEnglish}
-                  onChange={(e) => setUseEnglish(e.target.checked)}
-                />
-              }
-              label="Force English"
-            />
-
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={useSimplified}
-                  onChange={(e) => setUseSimplified(e.target.checked)}
-                />
-              }
-              label="Simplified Mode"
-            />
+            <Box>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={useEnglish}
+                    onChange={(e) => setUseEnglish(e.target.checked)}
+                  />
+                }
+                label="Use English"
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={useSimplified}
+                    onChange={(e) => setUseSimplified(e.target.checked)}
+                  />
+                }
+                label="Simplified Mode"
+              />
+            </Box>
           </Box>
 
           <Button
@@ -366,27 +375,72 @@ const MainContent = ({
             {loading ? <CircularProgress size={24} /> : "Enhance Prompt"}
           </Button>
 
-          {enhancedPrompt && (
-            <Card>
-              <CardContent>
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    mb: 2,
-                  }}
+          {showFollowUps &&
+            followUpQuestions &&
+            followUpQuestions.length > 0 && (
+              <Box sx={{ mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Follow-up Questions
+                </Typography>
+                {followUpQuestions.map((question, index) => (
+                  <Box key={index} sx={{ mb: 2 }}>
+                    <Typography variant="subtitle1" gutterBottom>
+                      {question}
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={2}
+                      placeholder="Enter your answer..."
+                      value={followUpAnswers[question] || ""}
+                      onChange={(e) =>
+                        handleFollowUpAnswer(question, e.target.value)
+                      }
+                      variant="outlined"
+                    />
+                  </Box>
+                ))}
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={generateFinalPrompt}
+                  disabled={loading}
+                  fullWidth
+                  sx={{ mt: 3 }}
                 >
-                  <Typography variant="h6">Enhanced Prompt</Typography>
+                  {loading ? <CircularProgress size={24} /> : "Generate Final Prompt"}
+                </Button>
+              </Box>
+            )}
+
+          {enhancedPrompt && (
+            <Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  mb: 2,
+                }}
+              >
+                <Typography variant="h6">Enhanced Prompt</Typography>
+                <Tooltip title="Copy to clipboard">
                   <IconButton onClick={() => copyToClipboard(enhancedPrompt)}>
                     <ContentCopyIcon />
                   </IconButton>
-                </Box>
-                <Typography variant="body1" sx={{ whiteSpace: "pre-wrap" }}>
-                  {enhancedPrompt}
-                </Typography>
-              </CardContent>
-            </Card>
+                </Tooltip>
+              </Box>
+              <Card variant="outlined">
+                <CardContent>
+                  <Typography
+                    variant="body1"
+                    style={{ whiteSpace: "pre-wrap" }}
+                  >
+                    {enhancedPrompt}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
           )}
         </Paper>
       </Grid>
