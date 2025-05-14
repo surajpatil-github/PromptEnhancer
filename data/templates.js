@@ -1,8 +1,8 @@
 module.exports = {
   system:
-    "You are a prompt engineering expert. Your task is to enhance the given prompt using the specified technique. Provide only the enhanced prompt without any explanations.",
+    "You are a prompt engineering expert. Your task is to enhance the given prompt using the specified technique. DO NOT include any explanations, headers, labels, or brackets. Provide ONLY the enhanced prompt text itself with no additional text or formatting.",
   system_multiple:
-    "You are a prompt engineering expert. Your task is to enhance the given prompt by incorporating multiple prompt engineering techniques. Provide only the enhanced prompt without any explanations.",
+    "You are a prompt engineering expert. Your task is to enhance the given prompt by incorporating multiple prompt engineering techniques. DO NOT include any explanations, headers, labels, or brackets. Provide ONLY the enhanced prompt text itself with no additional text or formatting.",
   lang_eng: "Please provide the response in English only.",
   lang_default:
     "Please provide the response in the same language as the input prompt.",

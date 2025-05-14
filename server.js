@@ -94,11 +94,18 @@ app.post("/api/enhance", async (req, res) => {
       // Add insert phrases if selected
       if (insertPhrases && Object.keys(insertPhrases).length > 0) {
         const phrases = require("./data/inserts");
+        let phraseText = "";
+        
         Object.keys(insertPhrases).forEach((phrase) => {
-          if (insertPhrases[phrase]) {
-            enhancedPrompt = phrases[phrase] + "\n" + enhancedPrompt;
+          if (insertPhrases[phrase] && phrases[phrase]) {
+            phraseText += phrases[phrase] + " ";
           }
         });
+        
+        // Only add the phrase text if it's not empty
+        if (phraseText.trim()) {
+          enhancedPrompt = phraseText + "\n\n" + enhancedPrompt;
+        }
       }
 
       console.log(
@@ -137,17 +144,26 @@ app.post("/api/enhance", async (req, res) => {
       // Add insert phrases if selected
       if (insertPhrases && Object.keys(insertPhrases).length > 0) {
         const phrases = require("./data/inserts");
+        let phraseText = "";
+        let addedPhrases = [];
+        
         Object.keys(insertPhrases).forEach((phrase) => {
-          if (insertPhrases[phrase]) {
-            enhancedPrompt = phrases[phrase] + "\n" + enhancedPrompt;
-            results.push({
-              step: orderNum,
-              skill: phrase,
-              prompt: enhancedPrompt,
-            });
-            orderNum++;
+          if (insertPhrases[phrase] && phrases[phrase]) {
+            phraseText += phrases[phrase] + " ";
+            addedPhrases.push(phrase);
           }
         });
+        
+        // Only add the phrase text if it's not empty
+        if (phraseText.trim()) {
+          enhancedPrompt = phraseText + "\n\n" + enhancedPrompt;
+          results.push({
+            step: orderNum,
+            skill: "Style: " + addedPhrases.join(", "),
+            prompt: enhancedPrompt,
+          });
+          orderNum++;
+        }
       }
 
       console.log(
@@ -272,6 +288,9 @@ async function applySkill(openai, skill, prompt, orderNum, langEng, model) {
     systemMessage += "\n" + templates.lang_default;
   }
 
+  // Add extra instruction to ensure no explanatory text
+  systemMessage += "\nIMPORTANT: Return ONLY the enhanced prompt with no explanations, no headers, no labels, and no quotation marks around it.";
+
   const template = templates[skill];
   if (!template) {
     throw new Error(`Template not found for skill: ${skill}`);
@@ -287,7 +306,30 @@ async function applySkill(openai, skill, prompt, orderNum, langEng, model) {
     ],
   });
 
-  return response.choices[0].message.content;
+  let enhancedContent = response.choices[0].message.content;
+  
+  // Clean up the response to remove any explanatory text
+  // Looking for patterns like "[Enhanced Prompt]", "Enhanced prompt:", etc.
+  const patterns = [
+    /\[Enhanced Prompt\](.*)/is,
+    /Enhanced prompt:(.*)/is,
+    /Utilizing .* technique to enhance .* prompt:(.*)/is,
+    /.*\[(.*)\].*/is,
+    /"(.*)"/s  // Text in quotes
+  ];
+  
+  for (const pattern of patterns) {
+    const match = enhancedContent.match(pattern);
+    if (match && match[1]) {
+      const extracted = match[1].trim();
+      if (extracted.length > prompt.length / 2) { // Ensure we're not extracting something too short
+        enhancedContent = extracted;
+        break;
+      }
+    }
+  }
+  
+  return enhancedContent;
 }
 
 // Helper function to apply multiple skills at once
@@ -306,6 +348,9 @@ async function applySkills(openai, skills, prompt, langEng, model) {
   } else {
     systemMessage += "\n" + templates.lang_default;
   }
+
+  // Add extra instruction to ensure no explanatory text
+  systemMessage += "\nIMPORTANT: Return ONLY the enhanced prompt with no explanations, no headers, no labels, and no quotation marks around it.";
 
   const selectedSkills = Object.keys(skills).filter((skill) => skills[skill]);
   let integratedTemplates = "[Prompt Engineering Techniques to Apply]\n";
@@ -332,7 +377,31 @@ async function applySkills(openai, skills, prompt, langEng, model) {
     ],
   });
 
-  return response.choices[0].message.content;
+  let enhancedContent = response.choices[0].message.content;
+  
+  // Clean up the response to remove any explanatory text
+  // Looking for patterns like "[improved]", "Enhanced:", etc.
+  const patterns = [
+    /\[improved\](.*)/is,
+    /Enhanced:(.*)/is,
+    /Enhanced prompt:(.*)/is,
+    /Utilizing .* techniques to enhance .* prompt:(.*)/is,
+    /"(.*)"/s,  // Text in quotes
+    /```(.*?)```/s  // Text in code blocks
+  ];
+  
+  for (const pattern of patterns) {
+    const match = enhancedContent.match(pattern);
+    if (match && match[1]) {
+      const extracted = match[1].trim();
+      if (extracted.length > prompt.length / 2) { // Ensure we're not extracting something too short
+        enhancedContent = extracted;
+        break;
+      }
+    }
+  }
+  
+  return enhancedContent;
 }
 
 // Add a default route for development
@@ -389,11 +458,18 @@ app.post("/api/final-prompt", async (req, res) => {
       // Add insert phrases if selected
       if (insertPhrases && Object.keys(insertPhrases).some(phrase => insertPhrases[phrase])) {
         const phrases = require("./data/inserts");
+        let phraseText = "";
+        
         Object.keys(insertPhrases).forEach((phrase) => {
-          if (insertPhrases[phrase]) {
-            finalPrompt = phrases[phrase] + "\n" + finalPrompt;
+          if (insertPhrases[phrase] && phrases[phrase]) {
+            phraseText += phrases[phrase] + " ";
           }
         });
+        
+        // Only add the phrase text if it's not empty
+        if (phraseText.trim()) {
+          finalPrompt = phraseText + "\n\n" + finalPrompt;
+        }
       }
     } else {
       // If no techniques were selected, just use the combined prompt
