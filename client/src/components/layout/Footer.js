@@ -18,7 +18,7 @@ const Footer = () => {
           {new Date().getFullYear()}{" "}
           <Link
             color="inherit"
-            href="https://github.com/rohit/a"
+            href="https://github.com/Rohitlyengar/PromptEnhancer"
             target="_blank"
             rel="noopener"
           >

@@ -52,21 +52,10 @@ const Header = ({ apiKey, onApiKeyChange }) => {
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Link
-            href="https://arxiv.org/pdf/2312.16171.pdf"
-            target="_blank"
-            rel="noopener"
-            sx={{ textDecoration: "none", color: "inherit" }}
-          >
-            <Button color="inherit" size="small">
-              Documentation
-            </Button>
-          </Link>
-
           <IconButton
             color="inherit"
             component={Link}
-            href="https://github.com/rohit/a"
+            href="https://github.com/Rohitlyengar/PromptEnhancer"
             target="_blank"
             rel="noopener"
             size="small"
