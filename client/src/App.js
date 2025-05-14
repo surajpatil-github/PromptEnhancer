@@ -201,6 +201,9 @@ function App() {
       setConversationId(response.data.conversationId);
       setFollowUpQuestions(response.data.followUpQuestions || []);
       setShowFollowUps(true);
+      
+      // Reset follow-up answers when starting a new enhancement
+      setFollowUpAnswers({});
     } catch (error) {
       console.error("Error enhancing prompt:", error);
       setError(error.response?.data?.error || error.message || "Unknown error");

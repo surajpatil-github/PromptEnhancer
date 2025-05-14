@@ -73,6 +73,9 @@ app.post("/api/enhance", async (req, res) => {
       originalPrompt: prompt,
       followUpQuestions,
       timestamp: Date.now(),
+      skills: skills,
+      insertPhrases: insertPhrases,
+      useEnglish: useEnglish,
     });
 
     let enhancedPrompt = prompt;
@@ -351,9 +354,14 @@ app.post("/api/final-prompt", async (req, res) => {
       return res.status(400).json({ error: "Missing required parameters" });
     }
     
+    if (!conversations.has(conversationId)) {
+      return res.status(400).json({ error: "Invalid conversation ID" });
+    }
+    
+    const conversation = conversations.get(conversationId);
+    const { originalPrompt, skills, insertPhrases, useEnglish } = conversation;
+    
     // Process answers and generate final prompt
-    // This implementation will depend on your OpenAI integration
-    // Here's a simple example:
     const openai = new OpenAI({
       apiKey: apiKey,
     });
@@ -362,21 +370,49 @@ app.post("/api/final-prompt", async (req, res) => {
       .map(([question, answer]) => `Q: ${question}\nA: ${answer}`)
       .join("\n\n");
     
-    const response = await openai.chat.completions.create({
-      model: model || "gpt-4",
-      messages: [
-        {
-          role: "system",
-          content: "You are a prompt engineering assistant. Generate a final enhanced prompt based on the original prompt and the answers to follow-up questions."
-        },
-        {
-          role: "user",
-          content: `Using the conversation ID ${conversationId} and the following Q&A pairs, generate a final enhanced prompt:\n\n${answerText}`
-        }
-      ]
-    });
+    // Create an enhanced prompt that includes the answers
+    const promptWithAnswers = `${originalPrompt}\n\nAdditional context from follow-up questions:\n${answerText}`;
     
-    const finalPrompt = response.choices[0].message.content;
+    // Apply the selected techniques to the prompt with answers
+    let finalPrompt;
+    
+    if (skills && Object.keys(skills).some(skill => skills[skill])) {
+      // Apply selected techniques to the updated prompt
+      finalPrompt = await applySkills(
+        openai,
+        skills,
+        promptWithAnswers,
+        useEnglish,
+        model
+      );
+      
+      // Add insert phrases if selected
+      if (insertPhrases && Object.keys(insertPhrases).some(phrase => insertPhrases[phrase])) {
+        const phrases = require("./data/inserts");
+        Object.keys(insertPhrases).forEach((phrase) => {
+          if (insertPhrases[phrase]) {
+            finalPrompt = phrases[phrase] + "\n" + finalPrompt;
+          }
+        });
+      }
+    } else {
+      // If no techniques were selected, just use the combined prompt
+      const response = await openai.chat.completions.create({
+        model: model || "gpt-4",
+        messages: [
+          {
+            role: "system",
+            content: "You are a prompt engineering assistant. Generate a final enhanced prompt based on the original prompt and the answers to follow-up questions."
+          },
+          {
+            role: "user",
+            content: `Generate an enhanced prompt based on the following prompt and Q&A pairs:\n\nOriginal prompt: ${originalPrompt}\n\nFollow-up Q&A:\n${answerText}`
+          }
+        ]
+      });
+      
+      finalPrompt = response.choices[0].message.content;
+    }
     
     res.json({ finalPrompt });
   } catch (error) {
