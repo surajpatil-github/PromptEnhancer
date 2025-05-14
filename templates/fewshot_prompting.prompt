@@ -1,0 +1,20 @@
+Improve the original prompt by adding a couple of relevant examples that demonstrate the kind of answer or information being requested. Incorporate those examples smoothly into the prompt to make the desired response clear.
+
+Here are examples demonstrating how to apply this principle:
+
+[original]
+Classify the emotion of the following text as positive, negative, or neutral. 
+"It's a good day to try something fun." 
+[improved]
+Classify the emotion of the following text as positive, negative, or neutral. 
+Example1: "This music is awesome." (Positive) 
+Example2: "I don't like spicy flavors." (Negative)
+Example3: "Every flower blooms at a different pace." (Neutral)
+Question: "It's a good day to try something fun." 
+
+========
+Based on this approach, refine the following prompt.
+
+[original]
+{prompt}
+[improved]

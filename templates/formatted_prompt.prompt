@@ -1,0 +1,18 @@
+Structure the original prompt by beginning with the '###Instruction###' tag, followed by '###Example###' or '###Question###' tags if applicable. After the tags, provide the relevant content for each section. Utilize line breaks to clearly separate the instructions, examples, questions, context, and input data, ensuring that each part is distinct and easily identifiable.
+
+Here are examples demonstrating how to apply this principle:
+
+[original]
+Provide a synonym for a given adjective. What’s another word for "happy"?
+[improved]
+###Instruction###
+Provide a synonym for a given adjective.
+### Question ###
+What's another word for "happy"?
+
+========
+Based on this approach, refine the following prompt.
+
+[original]
+{prompt}
+[improved]

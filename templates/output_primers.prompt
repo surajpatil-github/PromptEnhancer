@@ -1,0 +1,15 @@
+Incorporate output primers into the original prompt by ending it with the beginning of the desired response. This technique guides the model to generate output that follows a specific structure or format. 
+
+Here are examples demonstrating how to apply this principle:
+
+[original]
+What are the primary reasons for the decline in bee populations worldwide and why is this concerning?
+[improved]
+What are the primary reasons for the decline in bee populations worldwide and why is this concerning? Analysis:
+
+========
+Based on this approach, refine the following prompt.
+
+[original]
+{prompt}
+[improved]
