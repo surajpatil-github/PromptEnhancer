@@ -61,11 +61,15 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [models] = useState([
-    { id: "gpt-4", name: "GPT-4" },
-    { id: "gpt-4-turbo-preview", name: "GPT-4 Turbo" },
-    { id: "gpt-3.5-turbo", name: "GPT-3.5 Turbo" },
+    { id: "gpt-4o", name: "GPT-4o" },
+    { id: "gpt-4.1-mini", name: "GPT-4.1 Mini" },
+    { id: "gpt-4.1-nano", name: "GPT-4.1 Nano" },
+    { id: "gpt-4o-mini", name: "GPT-4o Mini" },
+    { id: "o4-mini", name: "o4-mini" },
+    { id: "o3-mini", name: "o3-mini" },
   ]);
-  const [selectedModel, setSelectedModel] = useState("gpt-4");
+
+  const [selectedModel, setSelectedModel] = useState("gpt-4.1-mini");
   const [conversationId, setConversationId] = useState(null);
   const [followUpQuestions, setFollowUpQuestions] = useState([]);
   const [lockedQuestions, setLockedQuestions] = useState(false); // Add this state to track if questions should be locked
