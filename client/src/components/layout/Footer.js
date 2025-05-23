@@ -78,22 +78,6 @@ const Footer = () => {
             sx={{ mb: { xs: 2, md: 0 } }}
           >
             <Link 
-              href="#" 
-              underline="hover" 
-              color="text.secondary"
-              sx={{ fontWeight: 500 }}
-            >
-              Documentation
-            </Link>
-            <Link 
-              href="#" 
-              underline="hover" 
-              color="text.secondary"
-              sx={{ fontWeight: 500 }}
-            >
-              Privacy Policy
-            </Link>
-            <Link 
               href="https://github.com/Rohitlyengar/PromptEnhancer" 
               underline="hover" 
               color="text.secondary"
