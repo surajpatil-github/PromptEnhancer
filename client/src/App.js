@@ -65,7 +65,7 @@ function App() {
     { id: "gpt-4.1-mini", name: "GPT-4.1 Mini" },
     { id: "gpt-4.1-nano", name: "GPT-4.1 Nano" },
     { id: "gpt-4o-mini", name: "GPT-4o Mini" },
-    { id: "gpt-3.5-turbo-flash", name: "GPT-3.5 Flash" }
+    { id: "gpt-3.5-turbo", name: "GPT-3.5 Flash" }
   ]);
 
   const [selectedModel, setSelectedModel] = useState("gpt-4.1-mini");
