@@ -1,30 +1,25 @@
 const express = require("express");
 const router = express.Router();
 
-// Import templates and insert data
-// (these files exist in your repo: /data/*.js and /templates.js)
-const templates = require("../../data/templates");
-const inserts = require("../../data/inserts");
+// If your repo has these data files, keep them; otherwise you can remove these two lines
+let templates = [];
+let inserts = [];
+try {
+  templates = require("../../data/templates");
+} catch {}
+try {
+  inserts = require("../../data/inserts");
+} catch {}
 
-// -------------- GET endpoints --------------
+// --------- GET endpoints (for your UI lists) ---------
 
-// @route  GET /api/prompts/templates
-// @desc   Get all prompt templates
-// @access Public
-router.get("/templates", (_req, res) => {
-  res.json(templates);
-});
+// GET /api/prompts/templates
+router.get("/templates", (_req, res) => res.json(templates));
 
-// @route  GET /api/prompts/inserts
-// @desc   Get all insert phrases
-// @access Public
-router.get("/inserts", (_req, res) => {
-  res.json(inserts);
-});
+// GET /api/prompts/inserts
+router.get("/inserts", (_req, res) => res.json(inserts));
 
-// @route  GET /api/prompts
-// @desc   Get all available prompt-engineering techniques (for UI list)
-// @access Public
+// GET /api/prompts  (techniques list used by UI)
 router.get("/", (_req, res) => {
   const techniques = {
     basic: [
@@ -42,24 +37,14 @@ router.get("/", (_req, res) => {
   res.json(techniques);
 });
 
-// -------------- POST enhance --------------
-// Works at BOTH:
-//   POST /api/prompts          (because this file is mounted at /api/prompts)
-//   POST /api/enhance          (server.js mounts the same router at /api/enhance)
-//
-// Body example:
-// {
-//   "text": "bake a cake",
-//   "tone": "Simple",
-//   "format": "Plain",
-//   "content": "Add constraints",
-//   "language": "English",
-//   "model": "gpt-4o"
-// }
+// --------- POST enhance (the one your button needs) ---------
 
 const OpenAI = require("openai");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
+// Works at BOTH:
+//   POST /api/prompts
+//   POST /api/enhance   (because server.js mounts the same router there too)
 router.post("/", async (req, res) => {
   try {
     const {
@@ -84,7 +69,6 @@ router.post("/", async (req, res) => {
       `Original prompt:\n${text}\n\n` +
       `Preferences:\n- Tone: ${tone}\n- Format: ${format}\n- Extra guidance: ${content || "none"}`;
 
-    // OpenAI (Node v4 client)
     const completion = await openai.chat.completions.create({
       model,
       messages: [
@@ -95,13 +79,7 @@ router.post("/", async (req, res) => {
     });
 
     const enhanced = completion.choices?.[0]?.message?.content?.trim() || "";
-
-    return res.json({
-      ok: true,
-      enhanced,
-      model,
-      usage: completion.usage || null
-    });
+    return res.json({ ok: true, enhanced, model, usage: completion.usage || null });
   } catch (err) {
     console.error("Enhance error:", err);
     return res.status(500).json({ error: "Failed to enhance prompt via OpenAI." });
