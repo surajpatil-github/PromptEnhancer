@@ -30,6 +30,7 @@ try {
 
 // API Routes
 app.use("/api/prompts", promptsData);
+app.use("/api/enhance", promptsData);
 
 // Example health route
 app.get("/ping", (req, res) => {
