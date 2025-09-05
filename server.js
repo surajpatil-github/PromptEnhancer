@@ -52,3 +52,15 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, "0.0.0.0", () =>
   console.log(`✅ Server running on http://0.0.0.0:${PORT}`)
 );
+
+const path = require("path");
+
+if (process.env.NODE_ENV === "production") {
+  // Change 'build' to 'dist' if client uses Vite
+  const clientBuildPath = path.join(__dirname, "client", "build");
+  app.use(express.static(clientBuildPath));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(clientBuildPath, "index.html"));
+  });
+}
