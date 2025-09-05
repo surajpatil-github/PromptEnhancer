@@ -10,10 +10,7 @@ const app = express();
 app.use(express.json({ limit: "1mb" }));
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? "*" // (optionally restrict to your domain)
-        : ["http://localhost:3000"],
+    origin: process.env.NODE_ENV === "production" ? "*" : ["http://localhost:3000"],
     credentials: true,
   })
 );
@@ -39,7 +36,7 @@ app.get("/ping", (_req, res) => {
 
 // ---------- serve React build in production ----------
 if (process.env.NODE_ENV === "production") {
-  // CRA builds to "client/build" (Vite would be "client/dist")
+  // CRA builds to "client/build"
   const clientBuild = path.join(__dirname, "client", "build");
   app.use(express.static(clientBuild));
   app.get("*", (_req, res) => {
