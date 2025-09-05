@@ -39,11 +39,11 @@ app.get("/ping", (req, res) => {
 // Serve static files from client in production
 if (process.env.NODE_ENV === "production") {
   // ⚠️ If using Create React App, change "dist" to "build"
-  const clientBuild = path.join(__dirname, "client", "dist");
+  const clientBuild = path.join(__dirname, "client", "build");
   app.use(express.static(clientBuild));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(clientBuild, "index.html"));
+    res.sendFile(path.join(clientBuildPath, "index.html"));
   });
 }
 
