@@ -9,6 +9,7 @@ const app = express();
 // ---------- middleware ----------
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true })); 
+app.use(express.text({ type: "text/*", limit: "1mb" })); 
 app.use(
   cors({
     origin: process.env.NODE_ENV === "production" ? "*" : ["http://localhost:3000"],
