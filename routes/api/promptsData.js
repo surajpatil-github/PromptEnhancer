@@ -47,18 +47,29 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 //   POST /api/enhance   (because server.js mounts the same router there too)
 router.post("/", async (req, res) => {
   try {
-    const {
-      text,
-      tone = "Simple",
-      format = "Plain",
-      content = "",
-      language = "English",
-      model = "gpt-4o"
-    } = req.body || {};
+    // accept many possible keys from the UI
+    const body = req.body || {};
+    const rawText =
+      body.text ??
+      body.prompt ??
+      body.input ??
+      body.message ??
+      body.query ??
+      (body.data && (body.data.text || body.data.prompt));
 
-    if (!text || !String(text).trim()) {
+    const text = typeof rawText === "string" ? rawText.trim() : "";
+    const tone = body.tone || "Simple";
+    const format = body.format || "Plain";
+    const content = body.content || "";
+    const language = body.language || "English";
+    const model = body.model || "gpt-4o";
+
+    if (!text) {
       return res.status(400).json({ error: "text is required" });
     }
+
+    // ... keep the rest of your OpenAI call exactly as before ...
+
 
     const system =
       `You are a prompt-engineering assistant. ` +
@@ -87,3 +98,4 @@ router.post("/", async (req, res) => {
 });
 
 module.exports = router;
+
