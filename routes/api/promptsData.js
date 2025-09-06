@@ -42,34 +42,40 @@ router.get("/", (_req, res) => {
 const OpenAI = require("openai");
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// Works at BOTH:
-//   POST /api/prompts
-//   POST /api/enhance   (because server.js mounts the same router there too)
+// --------- POST enhance ---------
+const OpenAI = require("openai");
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// helper: pick first non-empty string
+const pick = (...vals) => vals.find(v => typeof v === "string" && v.trim().length) || "";
+
 router.post("/", async (req, res) => {
   try {
-    // accept many possible keys from the UI
-    const body = req.body || {};
-    const rawText =
-      body.text ??
-      body.prompt ??
-      body.input ??
-      body.message ??
-      body.query ??
-      (body.data && (body.data.text || body.data.prompt));
+    console.log("ENHANCE incoming headers:", req.headers);
+    console.log("ENHANCE incoming body:", typeof req.body, req.body);
 
-    const text = typeof rawText === "string" ? rawText.trim() : "";
-    const tone = body.tone || "Simple";
-    const format = body.format || "Plain";
-    const content = body.content || "";
-    const language = body.language || "English";
-    const model = body.model || "gpt-4o";
+    const b = req.body || {};
+    const text = pick(
+      b.text,
+      b.prompt,
+      b.input,
+      b.message,
+      b.query,
+      b.content,
+      b?.data?.text,
+      b?.data?.prompt,
+      typeof b === "string" ? b : ""
+    );
 
-    if (!text) {
+    const tone     = pick(b.tone, b.style, "Simple");
+    const format   = pick(b.format, "Plain");
+    const guidance = pick(b.guidance, b.extra, b.notes, "");
+    const language = pick(b.language, "English");
+    const model    = pick(b.model, "gpt-4o");
+
+    if (!text.trim()) {
       return res.status(400).json({ error: "text is required" });
     }
-
-    // ... keep the rest of your OpenAI call exactly as before ...
-
 
     const system =
       `You are a prompt-engineering assistant. ` +
@@ -78,7 +84,7 @@ router.post("/", async (req, res) => {
 
     const userMessage =
       `Original prompt:\n${text}\n\n` +
-      `Preferences:\n- Tone: ${tone}\n- Format: ${format}\n- Extra guidance: ${content || "none"}`;
+      `Preferences:\n- Tone: ${tone}\n- Format: ${format}\n- Extra guidance: ${guidance || "none"}`;
 
     const completion = await openai.chat.completions.create({
       model,
@@ -90,12 +96,23 @@ router.post("/", async (req, res) => {
     });
 
     const enhanced = completion.choices?.[0]?.message?.content?.trim() || "";
-    return res.json({ ok: true, enhanced, model, usage: completion.usage || null });
+
+    return res.json({
+      ok: true,
+      enhanced,
+      result: enhanced,
+      enhancedPrompt: enhanced,
+      data: { enhanced },
+      model,
+      usage: completion.usage || null
+    });
   } catch (err) {
     console.error("Enhance error:", err);
     return res.status(500).json({ error: "Failed to enhance prompt via OpenAI." });
   }
 });
 
+
 module.exports = router;
+
 
